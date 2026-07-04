@@ -1,1 +1,10 @@
-config.js
+# Real API keys live here locally — never commit this file.
+# Generated automatically by scripts/generate-config.js from .env.
+js/config.js
+
+# Your real local secrets — never commit this file.
+.env
+
+# OS/editor noise
+.DS_Store
+Thumbs.db

@@ -72,20 +72,47 @@ to a locally-generated summary instead of calling Groq.
 > before sharing this with real users, move the `fetch()` call in `js/groq.js`
 > into a Supabase Edge Function so the key stays server-side.
 
-## 5. Fill in `js/config.js`
+## 5. Set up your keys with `.env`
 
-Open `js/config.js` and paste in your three values:
+Keys are generated into `js/config.js` automatically from environment
+variables — you never hand-edit `config.js` directly, and it's git-ignored so
+it's never committed.
 
-```js
-export const SUPABASE_URL = "https://your-project.supabase.co";
-export const SUPABASE_ANON_KEY = "your-anon-key";
-export const GROQ_API_KEY = "your-groq-key"; // or leave the placeholder
+**Locally:**
+
+```bash
+cp .env.example .env
 ```
+
+Open `.env` and fill in your real values:
+
+```
+SUPABASE_URL=https://your-project.supabase.co
+SUPABASE_ANON_KEY=your-anon-key
+GROQ_API_KEY=your-groq-key
+GROQ_MODEL=llama-3.3-70b-versatile
+ATTENDANCE_RADIUS_METERS=200
+```
+
+Then generate `js/config.js` from it:
+
+```bash
+node scripts/generate-config.js
+```
+
+(This has no npm dependencies — it's plain Node, so no `npm install` needed.)
+Re-run this command any time you change `.env`.
+
+**On Render**, you won't use `.env` at all — Render injects environment
+variables directly into the build. See the Deploying section below.
 
 ## 6. Run it locally
 
 Because the app uses ES module imports, you need to serve it over `http://`
-rather than opening `index.html` directly as a `file://` URL. From this folder:
+rather than opening `index.html` directly as a `file://` URL.
+
+Make sure you've run `node scripts/generate-config.js` at least once (step 5),
+then from this folder:
 
 ```bash
 # Python (built into macOS/Linux, or `python` on Windows)
@@ -93,6 +120,9 @@ python3 -m http.server 8080
 
 # or Node
 npx serve .
+
+# or, if you have npm available, this does both steps for you:
+npm start
 ```
 
 Then open `http://localhost:8080`.
@@ -119,38 +149,56 @@ files — Render, Netlify, Vercel, GitHub Pages, etc.
 
 ### Deploying on Render
 
-1. Push this folder to a GitHub repo.
+1. Push this folder to a GitHub repo. `.env` and `js/config.js` won't be
+   included (they're git-ignored) — that's expected.
 2. In Render: **New → Static Site**.
 3. Connect the repo.
-4. Build command: leave blank (nothing to build).
-5. Publish directory: `.` (the repo root, where `index.html` lives).
-6. Deploy. Render will give you a `https://your-app.onrender.com` URL.
+4. **Build Command:** `node scripts/generate-config.js`
+5. **Publish Directory:** `.` (the repo root, where `index.html` lives).
+6. Before deploying, go to the **Environment** tab for this service and add
+   each variable from `.env.example` as a real environment variable:
+   - `SUPABASE_URL`
+   - `SUPABASE_ANON_KEY`
+   - `GROQ_API_KEY`
+   - `GROQ_MODEL`
+   - `ATTENDANCE_RADIUS_METERS`
+7. Deploy. Render runs the build command, which generates `js/config.js` from
+   those variables right before serving the site. Render will give you a
+   `https://your-app.onrender.com` URL.
 
-Since `js/config.js` holds your Supabase/Groq keys directly in the client bundle,
-there's nothing extra to configure as environment variables for this simple
-version — just make sure `config.js` has your real values committed (or, better,
-keep a separate untracked `config.js` per environment and .gitignore it, using a
-placeholder file in git).
+Any time you update a key in Render's Environment tab, trigger a new deploy
+(Render does this automatically on env var changes, or you can click **Manual
+Deploy**) so the build step regenerates `config.js` with the new value.
+
+Keep in mind: the Supabase anon key and Groq key still end up inside the
+JavaScript that ships to the browser — that's unavoidable for a pure client-side
+app. Using `.env` + Render's Environment tab keeps keys out of your git history
+and makes rotating them easy, but it doesn't make them a server-side secret. For
+real secrecy on the Groq key, see the Edge Function note above.
 
 ---
 
 ## Project structure
 
 ```
-index.html              entry point
-css/style.css            all styling (design tokens at the top)
-js/config.js             Supabase + Groq keys (fill these in)
-js/supabaseClient.js     Supabase client setup
-js/state.js              shared in-memory app state
-js/utils.js              helpers: formatting, toast messages, meeting-intent parser
-js/auth.js               welcome/login/signup + admin onboarding wizard + worker join
-js/shell.js              sidebar/nav shell shared by admin & worker views
-js/admin.js              admin dashboard, sales/products, collab, worker mgmt, settings
-js/worker.js             worker home (attendance + sales entry), settings
-js/chat.js               real-time chat + calendar (NLP meeting detection)
-js/groq.js               Groq API calls for AI insight + simple sales forecasting
-js/main.js               boots the app, handles routing
-schema.sql               run once in Supabase SQL editor
+index.html                  entry point
+package.json                convenience npm scripts (build, start)
+.env.example                 template for your keys — copy to .env
+.gitignore                   keeps .env and js/config.js out of git
+scripts/generate-config.js   reads .env / Render env vars → writes js/config.js
+css/style.css                all styling (design tokens at the top)
+js/config.js                 AUTO-GENERATED — do not edit by hand
+js/supabaseClient.js         Supabase client setup
+js/state.js                  shared in-memory app state
+js/utils.js                  helpers: formatting, toast messages, meeting-intent parser
+js/auth.js                   welcome/login/signup + admin onboarding wizard + worker join
+js/shell.js                  sidebar/nav shell shared by admin & worker views
+js/admin.js                  admin dashboard, sales/products, collab, worker mgmt, settings
+js/worker.js                 worker home (attendance + sales entry), settings
+js/chat.js                   real-time chat + calendar (NLP meeting detection)
+js/groq.js                   Groq API calls for AI insight + simple sales forecasting
+js/main.js                   boots the app, handles routing
+schema.sql                   run once in Supabase SQL editor
 ```
 
 ## Where to go next
