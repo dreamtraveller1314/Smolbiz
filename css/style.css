@@ -10,18 +10,17 @@
   /* Light theme: white surfaces, light-blue accents. Names kept the same
      (--ink, --paper, etc.) so every component below keeps working — only
      what each token *points to* has changed. */
-  --ink:        #F3F8FF;
-  --ink-2:      #FFFFFF;
-  --surface:    #FFFFFF;
-  --surface-2:  #E7F1FD;
-  --line:       #D7E6F8;
-  --paper:      #12233F;
-  --muted:      #6C82A3;
-  --accent:      #3D95E8;
-  --accent-2:    #1E70C9;
-  --accent-ink:  #FFFFFF;
-  --teal:       #2AA398;
-  --coral:      #E2564A;
+  --ink:        #14172B;
+  --ink-2:      #1B1F3B;
+  --surface:    #1E2340;
+  --surface-2:  #262B4D;
+  --line:       #33385E;
+  --paper:      #F3F1EA;
+  --muted:      #9297BE;
+  --amber:      #F2A93C;
+  --amber-ink:  #3A2A08;
+  --teal:       #4FB0A5;
+  --coral:      #E8735D;
   --radius-s:   8px;
   --radius-m:   14px;
   --radius-l:   22px;
